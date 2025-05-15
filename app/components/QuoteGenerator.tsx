@@ -200,12 +200,21 @@ export default function QuoteGenerator() {
       const img = new Image();
       
       img.onload = () => {
+        // Check if the device is likely a mobile device
+        const isMobile = window.innerWidth < 768;
+        
         // Only set the background once the image has loaded
         document.body.style.backgroundImage = `url('${backgroundImage}')`;
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundPosition = 'center';
         document.body.style.backgroundRepeat = 'no-repeat';
-        document.body.style.backgroundAttachment = 'fixed';
+        document.body.style.backgroundAttachment = isMobile ? 'scroll' : 'fixed';
+        
+        // Add additional optimization for mobile
+        if (isMobile) {
+          // Lower quality background for mobile for better performance
+          document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('${backgroundImage}')`;
+        }
       };
       
       img.src = backgroundImage;
@@ -259,22 +268,22 @@ export default function QuoteGenerator() {
 
   return (
     <>
-      <div className="max-w-md w-full backdrop-blur-md bg-white/40 p-8 rounded-xl shadow-xl">
+      <div className="w-full max-w-sm sm:max-w-md backdrop-blur-md bg-white/40 p-5 sm:p-8 rounded-xl shadow-xl mx-auto">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="flex items-center justify-center py-6 sm:py-8">
+            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : (
           <>
-            <blockquote className="text-2xl italic text-center mb-6 text-gray-800 font-serif">
+            <blockquote className="text-lg sm:text-2xl italic text-center mb-4 sm:mb-6 text-gray-800 font-serif">
               "{quote.text}"
             </blockquote>
-            <p className="text-right self-end font-semibold text-gray-700 mb-8">
+            <p className="text-right self-end font-semibold text-gray-700 mb-6 sm:mb-8 text-sm sm:text-base">
               — {quote.author}
             </p>
             <button 
               onClick={fetchQuote}
-              className="btn bg-blue-500 hover:bg-blue-600 text-white mx-auto block mb-4"
+              className="btn bg-blue-500 hover:bg-blue-600 text-white mx-auto block mb-4 text-sm sm:text-base"
             >
               New Quote
             </button>
@@ -294,7 +303,7 @@ export default function QuoteGenerator() {
       
       {/* Photo Credit positioned at bottom right */}
       {photoCredit && (
-        <div className="fixed bottom-4 right-4 backdrop-blur-md bg-black/50 text-white px-3 py-2 rounded-lg text-xs shadow-lg z-50">
+        <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 backdrop-blur-md bg-black/50 text-white px-2 py-1 sm:px-3 sm:py-2 rounded-lg text-[10px] sm:text-xs shadow-lg z-50 max-w-[180px] sm:max-w-xs">
           Photo by <a 
             href={photoCredit.user.links.html} 
             target="_blank" 
@@ -303,31 +312,23 @@ export default function QuoteGenerator() {
           >
             {photoCredit.user.name}
           </a>{' '}
-          <a 
-            href={`https://unsplash.com/@${photoCredit.user.username}`}
+          on <a 
+            href="https://unsplash.com"
             target="_blank" 
             rel="noopener noreferrer"
             className="font-bold hover:text-blue-300 transition"
           >
-            @{photoCredit.user.username}
-          </a>{' '}
-          / <a 
-            href="https://unsplash.com"
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="font-bold hover:text-blue-300 transition ml-1"
-          >
-            unsplash.com
+            Unsplash
           </a>
         </div>
       )}
       
       {/* API Key Prompt for developers */}
       {apiStatus === 'error' && (
-        <div className="fixed top-4 right-4 backdrop-blur-md bg-amber-500/80 text-white px-3 py-2 rounded-lg text-xs shadow-lg z-50 max-w-xs">
+        <div className="fixed top-2 left-2 right-2 sm:top-4 sm:right-4 sm:left-auto backdrop-blur-md bg-amber-500/80 text-white px-3 py-2 rounded-lg text-xs shadow-lg z-50 max-w-xs">
           <p className="font-bold mb-1">⚠️ Missing API Key</p>
           <p>You need to add your Unsplash API key to use high-quality images.</p>
-          <ol className="mt-2 list-decimal list-inside">
+          <ol className="mt-2 list-decimal list-inside text-[10px] sm:text-xs">
             <li>Sign up at <a href="https://unsplash.com/developers" target="_blank" rel="noopener noreferrer" className="underline">unsplash.com/developers</a></li>
             <li>Create a new application</li>
             <li>Copy your Access Key</li>

@@ -4,6 +4,10 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
   body {
     @apply text-gray-800;
     min-height: 100vh;
@@ -12,19 +16,27 @@
     background-position: center;
     background-attachment: fixed;
     transition: background-image 0.8s ease-in-out;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-xl shadow-md p-6 transition-transform duration-300 hover:shadow-lg flex flex-col items-center;
+    @apply bg-white rounded-xl shadow-md p-4 sm:p-6 transition-transform duration-300 hover:shadow-lg flex flex-col items-center;
   }
   
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors duration-300 focus:outline-none;
+    @apply px-3 py-1.5 sm:px-4 sm:py-2 rounded-md font-medium transition-colors duration-300 focus:outline-none;
   }
   
   .btn-primary {
     @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  body {
+    background-attachment: scroll; /* Better mobile performance */
   }
 } 
