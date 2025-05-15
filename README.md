@@ -9,6 +9,7 @@ A simple and elegant random quote generator built with Next.js and Tailwind CSS.
 - Clean and responsive UI with Tailwind CSS
 - Loading state animation
 - One-click quote refresh
+- Dynamic backgrounds from Unsplash with photo attribution
 
 ## Technologies
 
@@ -16,6 +17,7 @@ A simple and elegant random quote generator built with Next.js and Tailwind CSS.
 - React 18
 - TypeScript
 - Tailwind CSS
+- Unsplash API
 
 ## Getting Started
 
@@ -29,7 +31,33 @@ yarn install
 pnpm install
 ```
 
-Then, run the development server:
+### Setting up Unsplash API
+
+1. Create a free Unsplash developer account at https://unsplash.com/developers
+2. Click on "Your apps" and then "New Application"
+3. Accept the terms and give your application a name and description
+4. Once created, copy your Access Key (not the Secret key)
+5. Create a `.env.local` file in the root directory of the project
+6. Add your Unsplash Access Key to the `.env.local` file:
+   ```
+   NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=your_unsplash_access_key_here
+   ```
+   Important: Do not include quotes around your API key
+
+#### Troubleshooting the Unsplash API
+
+If your background images aren't changing:
+- Make sure your `.env.local` file exists in the project root
+- Verify you've entered your API key correctly with no quotes
+- Restart the development server after creating/updating the `.env.local` file
+- Check the browser console for any API-related errors
+- Look for the colored status indicator at the bottom of the quote box:
+  - 🟢 Green: API is working correctly
+  - 🔴 Red: API error - check your API key
+
+### Running the application
+
+Run the development server:
 
 ```bash
 npm run dev
@@ -43,9 +71,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## How it Works
 
-The application fetches motivational quotes from the Quotable API. If the API fails or is unavailable, it uses a fallback list of curated quotes. 
+The application fetches motivational quotes from the Quotable API. If the API fails or is unavailable, it uses a fallback list of curated quotes. For each quote, a random background image is fetched from Unsplash.
 
-You can generate a new quote by clicking the "New Quote" button.
+You can generate a new quote and background by clicking the "New Quote" button.
 
 ## Learn More
 
@@ -55,6 +83,7 @@ To learn more about the technologies used in this project:
 - [React Documentation](https://reactjs.org/docs/getting-started.html)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Quotable API](https://github.com/lukePeavey/quotable) 
+- [Unsplash API](https://unsplash.com/documentation)
 
 ## Step by Step
 
@@ -94,8 +123,8 @@ This project was created as part of the Coursera "Aesthetic Front-End Developmen
 4. Add a fallback mechanism using a predefined list of quotes in case API calls fail
 
 ### Step 5: Add Visual Enhancement with Dynamic Backgrounds
-1. Create a curated list of high-quality architecture images from Unsplash
-2. Implement a function to randomly select and load background images
+1. Set up Unsplash API integration to fetch high-quality background images
+2. Implement proper attribution for Unsplash photographers as required by their API terms
 3. Add image preloading to ensure smooth transitions between backgrounds
 4. Apply the dynamic background to the body element with proper styling
 

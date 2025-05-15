@@ -8,6 +8,25 @@ interface Quote {
   author: string;
 }
 
+// Define the Unsplash photo type
+interface UnsplashPhoto {
+  id: string;
+  urls: {
+    regular: string;
+    full: string;
+  };
+  user: {
+    name: string;
+    username: string;
+    links: {
+      html: string;
+    }
+  };
+  links: {
+    html: string;
+  };
+}
+
 // List of motivational quotes as fallback
 const FALLBACK_QUOTES: Quote[] = [
   {
@@ -52,82 +71,113 @@ const FALLBACK_QUOTES: Quote[] = [
   }
 ];
 
-// List of curated Unsplash architectural image IDs
-const ARCHITECTURE_IMAGE_IDS = [
-  'Yd59eQJVYwo', // Modern facade
-  '2gDwlIim3Uw', // Interior staircase
-  'phIFdC6lA4E', // City skyline
-  'gREquCUXQLI', // Modern building exterior
-  'hTv8aaPziOQ', // Geometric architecture
-  '7lvzopS8mUQ', // Spiral staircase
-  'HYQvV8wWX18', // Minimalist building
-  'OBok3F8buKY', // Modern glass building
-  'eDu5FXZaUPw', // White structure
-  'nqlX2ik1JGw', // Skyscraper
-  'vP6z0sPeK_s', // Classic European building
-  '-FG5fermNjw', // Modern corridor
-  'c0I4ahyGIkA', // Historic columns
-  'VWcPlbHglYc', // Night skyline
-  'r4IyB-hZ95c'  // Modern design
+// Fallback images in case the Unsplash API fails
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1470770841072-f978cf4d019e',
+  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
+  'https://images.unsplash.com/photo-1518655048521-f130df041f66',
+  'https://images.unsplash.com/photo-1497250681960-ef046c08a56e'
 ];
 
 export default function QuoteGenerator() {
   const [quote, setQuote] = useState<Quote>({ text: '', author: '' });
   const [loading, setLoading] = useState(true);
   const [backgroundImage, setBackgroundImage] = useState('');
+  const [photoCredit, setPhotoCredit] = useState<UnsplashPhoto | null>(null);
+  const [counter, setCounter] = useState(0); // Add counter to force image refresh
+  const [apiStatus, setApiStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
-  // Function to get a direct URL for a random architecture image from Unsplash
-  const getDirectUnsplashImage = () => {
-    // Get a random image ID from our curated list
-    const randomIndex = Math.floor(Math.random() * ARCHITECTURE_IMAGE_IDS.length);
-    const imageId = ARCHITECTURE_IMAGE_IDS[randomIndex];
-    
-    // Create a direct URL to the image
-    // The timestamp is added as a cache-busting parameter to ensure we get a new image each time
+  // Function to fetch a random photo from Unsplash
+  const fetchRandomPhoto = async () => {
+    // Add timestamp to prevent caching
     const timestamp = new Date().getTime();
-    return `https://images.unsplash.com/photo-${imageId}?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&t=${timestamp}`;
+    const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || '';
+    
+    if (!accessKey || accessKey === 'your_unsplash_access_key_here') {
+      console.error("No Unsplash API key found. Check your .env.local file.");
+      setApiStatus('error');
+      return getFallbackImage();
+    }
+    
+    try {
+      // Using counter to ensure we get a different image each time
+      const response = await fetch(
+        `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,architecture&client_id=${accessKey}&t=${timestamp}&count=${counter}`,
+        {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Unsplash API error:', response.status, response.statusText);
+        setApiStatus('error');
+        return getFallbackImage();
+      }
+      
+      const data: UnsplashPhoto = await response.json();
+      
+      // For debugging
+      console.log('Fetched new image:', data.id);
+      
+      setPhotoCredit(data);
+      setApiStatus('success');
+      return data.urls.regular;
+    } catch (error) {
+      console.error('Error fetching photo:', error);
+      setApiStatus('error');
+      return getFallbackImage();
+    }
   };
 
-  useEffect(() => {
-    // Set initial background image
-    const imageUrl = getDirectUnsplashImage();
-    setBackgroundImage(imageUrl);
-  }, []);
+  // Get a fallback image if Unsplash API fails
+  const getFallbackImage = () => {
+    const randomIndex = Math.floor(Math.random() * FALLBACK_IMAGES.length);
+    return `${FALLBACK_IMAGES[randomIndex]}?t=${new Date().getTime()}`;
+  };
 
+  // Apply the background image
   useEffect(() => {
-    // Apply the background to the body element when backgroundImage changes
-    const updateBodyBackground = () => {
-      if (backgroundImage) {
-        // Create a new Image object to preload the image
-        const img = new Image();
-        
-        img.onload = () => {
-          // Only set the background once the image has loaded
-          document.body.style.backgroundImage = `url('${backgroundImage}')`;
-          document.body.style.backgroundSize = 'cover';
-          document.body.style.backgroundPosition = 'center';
-          document.body.style.backgroundRepeat = 'no-repeat';
-          document.body.style.backgroundAttachment = 'fixed';
-        };
-        
-        img.src = backgroundImage;
-      }
-    };
-
-    updateBodyBackground();
+    if (backgroundImage) {
+      // Create a new Image object to preload the image
+      const img = new Image();
+      
+      img.onload = () => {
+        // Only set the background once the image has loaded
+        document.body.style.backgroundImage = `url('${backgroundImage}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundAttachment = 'fixed';
+      };
+      
+      img.src = backgroundImage;
+    }
   }, [backgroundImage]);
 
   // Function to fetch a new quote
   async function fetchQuote() {
     setLoading(true);
+    setCounter(prev => prev + 1); // Increment counter to ensure a new image
     
     // Update the background image before fetching a new quote
-    const imageUrl = getDirectUnsplashImage();
+    const imageUrl = await fetchRandomPhoto();
     setBackgroundImage(imageUrl);
     
     try {
       // Try to fetch from the API
-      const response = await fetch('https://api.quotable.io/random?tags=inspirational,motivational');
+      const response = await fetch(
+        'https://api.quotable.io/random?tags=inspirational,motivational',
+        {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        }
+      );
       
       if (!response.ok) {
         throw new Error('Failed to fetch quote');
@@ -169,10 +219,40 @@ export default function QuoteGenerator() {
           </p>
           <button 
             onClick={fetchQuote}
-            className="btn bg-blue-500 hover:bg-blue-600 text-white mx-auto block"
+            className="btn bg-blue-500 hover:bg-blue-600 text-white mx-auto block mb-4"
           >
             New Quote
           </button>
+          
+          {photoCredit ? (
+            <div className="text-xs text-center text-gray-600 mt-4">
+              Photo by <a 
+                href={photoCredit.user.links.html} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                {photoCredit.user.name}
+              </a> on <a 
+                href="https://unsplash.com"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                Unsplash
+              </a>
+            </div>
+          ) : (
+            <div className="text-xs text-center text-gray-600 mt-4">
+              <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ 
+                backgroundColor: apiStatus === 'success' ? '#10b981' : 
+                                 apiStatus === 'error' ? '#ef4444' : '#f59e0b'
+              }}></span>
+              {apiStatus === 'success' ? 'Using Unsplash API' : 
+               apiStatus === 'error' ? 'Using fallback images - check your Unsplash API key' : 
+               'Loading images...'}
+            </div>
+          )}
         </>
       )}
     </div>
