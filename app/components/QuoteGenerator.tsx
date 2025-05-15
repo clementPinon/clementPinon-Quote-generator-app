@@ -97,6 +97,24 @@ export default function QuoteGenerator() {
     if (!accessKey || accessKey === 'your_unsplash_access_key_here') {
       console.error("No Unsplash API key found. Check your .env.local file.");
       setApiStatus('error');
+      // Set a fallback photo credit for unsplash attribution
+      setPhotoCredit({
+        id: 'fallback',
+        urls: {
+          regular: getFallbackImage(),
+          full: getFallbackImage()
+        },
+        user: {
+          name: 'Unsplash Contributor',
+          username: 'unsplash',
+          links: {
+            html: 'https://unsplash.com'
+          }
+        },
+        links: {
+          html: 'https://unsplash.com'
+        }
+      });
       return getFallbackImage();
     }
     
@@ -115,6 +133,24 @@ export default function QuoteGenerator() {
       if (!response.ok) {
         console.error('Unsplash API error:', response.status, response.statusText);
         setApiStatus('error');
+        // Set a fallback photo credit for unsplash attribution
+        setPhotoCredit({
+          id: 'fallback',
+          urls: {
+            regular: getFallbackImage(),
+            full: getFallbackImage()
+          },
+          user: {
+            name: 'Unsplash Contributor',
+            username: 'unsplash',
+            links: {
+              html: 'https://unsplash.com'
+            }
+          },
+          links: {
+            html: 'https://unsplash.com'
+          }
+        });
         return getFallbackImage();
       }
       
@@ -129,6 +165,24 @@ export default function QuoteGenerator() {
     } catch (error) {
       console.error('Error fetching photo:', error);
       setApiStatus('error');
+      // Set a fallback photo credit for unsplash attribution
+      setPhotoCredit({
+        id: 'fallback',
+        urls: {
+          regular: getFallbackImage(),
+          full: getFallbackImage()
+        },
+        user: {
+          name: 'Unsplash Contributor',
+          username: 'unsplash',
+          links: {
+            html: 'https://unsplash.com'
+          }
+        },
+        links: {
+          html: 'https://unsplash.com'
+        }
+      });
       return getFallbackImage();
     }
   };
@@ -204,57 +258,83 @@ export default function QuoteGenerator() {
   }, []);
 
   return (
-    <div className="max-w-md w-full backdrop-blur-md bg-white/40 p-8 rounded-xl shadow-xl">
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (
-        <>
-          <blockquote className="text-2xl italic text-center mb-6 text-gray-800 font-serif">
-            "{quote.text}"
-          </blockquote>
-          <p className="text-right self-end font-semibold text-gray-700 mb-8">
-            — {quote.author}
-          </p>
-          <button 
-            onClick={fetchQuote}
-            className="btn bg-blue-500 hover:bg-blue-600 text-white mx-auto block mb-4"
-          >
-            New Quote
-          </button>
-          
-          {photoCredit ? (
-            <div className="text-xs text-center text-gray-600 mt-4">
-              Photo by <a 
-                href={photoCredit.user.links.html} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="underline hover:text-blue-600"
-              >
-                {photoCredit.user.name}
-              </a> on <a 
-                href="https://unsplash.com"
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="underline hover:text-blue-600"
-              >
-                Unsplash
-              </a>
-            </div>
-          ) : (
-            <div className="text-xs text-center text-gray-600 mt-4">
-              <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ 
-                backgroundColor: apiStatus === 'success' ? '#10b981' : 
+    <>
+      <div className="max-w-md w-full backdrop-blur-md bg-white/40 p-8 rounded-xl shadow-xl">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            <blockquote className="text-2xl italic text-center mb-6 text-gray-800 font-serif">
+              "{quote.text}"
+            </blockquote>
+            <p className="text-right self-end font-semibold text-gray-700 mb-8">
+              — {quote.author}
+            </p>
+            <button 
+              onClick={fetchQuote}
+              className="btn bg-blue-500 hover:bg-blue-600 text-white mx-auto block mb-4"
+            >
+              New Quote
+            </button>
+            
+            {!photoCredit && (
+              <div className="text-xs text-center text-gray-600 mt-4">
+                <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ 
+                  backgroundColor: apiStatus === 'success' ? '#10b981' : 
                                  apiStatus === 'error' ? '#ef4444' : '#f59e0b'
-              }}></span>
-              {apiStatus === 'success' ? 'Using Unsplash API' : 
-               apiStatus === 'error' ? 'Using fallback images - check your Unsplash API key' : 
-               'Loading images...'}
-            </div>
-          )}
-        </>
+                }}></span>
+                {apiStatus === 'loading' ? 'Loading images...' : 'Image loading...'}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      
+      {/* Photo Credit positioned at bottom right */}
+      {photoCredit && (
+        <div className="fixed bottom-4 right-4 backdrop-blur-md bg-black/50 text-white px-3 py-2 rounded-lg text-xs shadow-lg z-50">
+          Photo by <a 
+            href={photoCredit.user.links.html} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-bold hover:text-blue-300 transition"
+          >
+            {photoCredit.user.name}
+          </a>{' '}
+          <a 
+            href={`https://unsplash.com/@${photoCredit.user.username}`}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-bold hover:text-blue-300 transition"
+          >
+            @{photoCredit.user.username}
+          </a>{' '}
+          / <a 
+            href="https://unsplash.com"
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-bold hover:text-blue-300 transition ml-1"
+          >
+            unsplash.com
+          </a>
+        </div>
       )}
-    </div>
+      
+      {/* API Key Prompt for developers */}
+      {apiStatus === 'error' && (
+        <div className="fixed top-4 right-4 backdrop-blur-md bg-amber-500/80 text-white px-3 py-2 rounded-lg text-xs shadow-lg z-50 max-w-xs">
+          <p className="font-bold mb-1">⚠️ Missing API Key</p>
+          <p>You need to add your Unsplash API key to use high-quality images.</p>
+          <ol className="mt-2 list-decimal list-inside">
+            <li>Sign up at <a href="https://unsplash.com/developers" target="_blank" rel="noopener noreferrer" className="underline">unsplash.com/developers</a></li>
+            <li>Create a new application</li>
+            <li>Copy your Access Key</li>
+            <li>Add it to <code className="bg-black/20 px-1 rounded">.env.local</code></li>
+          </ol>
+        </div>
+      )}
+    </>
   );
 } 
